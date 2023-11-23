@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <queue>
+#include <set>
 using namespace std;
 
 // space allocated
@@ -12,8 +13,8 @@ vector<string> nonterminals;
 vector<pair<string, string>> rules;
 vector<vector<char*>> rules_token;
 vector<string> testdata;
-vector<vector<string>> firsts;
-vector<vector<string>> follows;
+vector<set<string>> firsts;
+vector<set<string>> follows;
 struct der		// d1->d2,follows
 {
 	string d1;
@@ -46,7 +47,7 @@ string GetClosureToken();
 int main()
 {
 	// read testdata file
-	ifstream ifst("3_testdata.txt", ios::in);
+	ifstream ifst("1_testdata.txt", ios::in);
 	if (!ifst.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -57,7 +58,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("3_grammar.txt", ios::in);
+	ifstream ifs("1_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -171,9 +172,9 @@ int main()
 
 
 	// find firsts and follows
-	queue<pair<int,int>> ruleNumQ;
-	firsts.assign(rules.size(), vector<string>());
-	follows.assign(rules.size(), vector<string>());
+	queue<pair<int, int>> ruleNumQ;
+	firsts.assign(nonterminals.size(), set<string>());
+	follows.assign(nonterminals.size(), set<string>());
 	for (int i = 0; i < rules.size(); i++)
 	{
 		for (int j = 0; j < nonterminals.size(); j++)
@@ -182,15 +183,25 @@ int main()
 			if (rules[i].first == nonterminals[j])
 			{
 				s = GetClosureToken(i, 0);
-				if (s[0] >= 'a' && s[0] <= 'z')
-					firsts[i].push_back(s);
-				else ruleNumQ.push(s);
+				firsts[i].insert(s);
 			}
 		}
 	}
-	while (!ruleNumQ.empty())
+	for (int i = 0; i < firsts.size(); i++)
 	{
-
+		for (auto& j : firsts[i])
+		{
+			if (j[0] >= 'A' && j[0] <= 'Z')
+			{
+				for (int k = 0; k < nonterminals.size(); k++)
+				{
+					if (j[0] == nonterminals[k][0])
+					{
+						for (auto& l : )
+					}
+				}
+			}
+		}
 	}
 
 
@@ -254,7 +265,17 @@ int main()
 string GetClosureToken(int i, int j)
 {
 	if (j < 0)return "";// undefined
-	while (rules_token[i][j] == nullptr)j++;
+	if (j > 0)
+	{
+		n = 1;
+		int itg = 1;
+		while (itg < j)
+		{
+			while (rules_token[i][n] == nullptr)n++;
+			itg++;
+		}
+		j = n;
+	}
 	s = *rules_token[i][j];
 	n = 1;
 	while (n < rules_token[i].size()
