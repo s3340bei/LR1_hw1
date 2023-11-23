@@ -5,42 +5,46 @@
 #include <map>
 #include <queue>
 using namespace std;
+
+// space allocated
+vector<string> terminals;
+vector<string> nonterminals;
+vector<pair<string, string>> rules;
+vector<vector<char*>> rules_token;
+vector<string> testdata;
+vector<vector<string>> firsts;
+vector<vector<string>> follows;
+struct der		// d1->d2,follows
+{
+	string d1;
+	string d2;
+	int closure_pos = 0;//-1 denotes end position
+	int rNum;// rules numr
+	vector<string> follows;
+};
+struct sta
+{
+	vector<der> ders;
+	map<string, string> actions;
+	map<string, int> GoTo;
+};
+vector<sta> states;
+int stateNum = 0;
+
+// tmp variable
+string s;
+string ter;
+pair<string, string> pa;
+int n;
+const vector<char*> empty_v;
+bool b;
+queue<pair<pair<string, int>, vector<string>>> q;//(closure NT, closure_position), follows
+
+// functions
+string GetClosureToken();
+
 int main()
 {
-	// space allocated
-	vector<string> terminals;
-	vector<string> nonterminals;
-	vector<pair<string, string>> rules;
-	vector<vector<char*>> rules_token;
-	vector<string> testdata;
-	struct der
-	{
-		// d1->d2,follows
-		string d1;
-		string d2;
-		int closure_pos = 0;//-1 denotes end position
-		vector<string> follows;
-	};
-	struct sta
-	{
-		vector<der> ders;
-		map<string, string> actions;
-		map<string, int> GoTo;
-	};
-	vector<sta> states;
-	int stateNum = 0;
-
-	// tmp variable
-	string s;
-	string ter;
-	pair<string, string> pa;
-	int n;
-	const vector<char*> empty_v;
-	bool b;
-	queue<pair<string, vector<string>>> q;//closure NT, follows
-
-
-
 	// read testdata file
 	ifstream ifst("3_testdata.txt", ios::in);
 	if (!ifst.is_open())
@@ -103,7 +107,7 @@ int main()
 	}
 	// close file
 	ifs.close();
-	// deals with rules
+	//  rules token
 	n = min(terminals.size(), nonterminals.size());
 	for (int i = 0; i < rules.size(); i++)
 	{
@@ -166,6 +170,31 @@ int main()
 
 
 
+	// find firsts and follows
+	queue<pair<int,int>> ruleNumQ;
+	firsts.assign(rules.size(), vector<string>());
+	follows.assign(rules.size(), vector<string>());
+	for (int i = 0; i < rules.size(); i++)
+	{
+		for (int j = 0; j < nonterminals.size(); j++)
+		{
+			// get the needed rules
+			if (rules[i].first == nonterminals[j])
+			{
+				s = GetClosureToken(i, 0);
+				if (s[0] >= 'a' && s[0] <= 'z')
+					firsts[i].push_back(s);
+				else ruleNumQ.push(s);
+			}
+		}
+	}
+	while (!ruleNumQ.empty())
+	{
+
+	}
+
+
+
 
 	// FA && parsing table
 	// line 1
@@ -185,25 +214,22 @@ int main()
 	der der_t;
 	der_t.d1 = rules[0].first;
 	der_t.d2 = rules[0].second;
+	der_t.follows.push_back("$");
+	der_t.rNum = 0;
 	// S->.AA
-	if (*rules_token[stateNum][0] >= 'A' && *rules_token[stateNum][0] <= 'Z')
+	if (*rules_token[0][0] >= 'A' && *rules_token[0][0] <= 'Z')
 	{
-		s = *rules_token[stateNum][0];
-		n = 1;
-		while (n < rules_token[stateNum].size())
-			s += *(rules_token[stateNum][0] + n++);
+		s = GetClosureToken(0, 0);
 		vector<string> vs;
 		vs.push_back("$");
-		q.push(make_pair(s, vs));
+		q.push(make_pair(make_pair(s, 1), vs));// (closure NT, closure_position), follows
 	}
-	der_t.follows.push_back("$");
 	sta_t.ders.push_back(der_t);
-
 
 	// closure
 	while (!q.empty())
 	{
-		ter = q.front().first;
+		ter = q.front().first.first;
 		for (int i = 0; i < rules.size(); i++)
 		{
 			if (rules[i].first == ter)
@@ -211,19 +237,28 @@ int main()
 				der dr;
 				dr.d1 = rules[i].first;
 				dr.d2 = rules[i].second;
-				if (*rules_token[i][0] >= 'A' && *rules_token[i][0] <= 'Z')
+				dr.rNum = i;
+				s = GetClosureToken(i, 0);
+				// check if closure end
+				if (s[0] >= 'A' && s[0] <= 'Z')
 				{
-					s = *rules_token[i][0];
-					n = 1;
-					while (n < rules_token[i].size())
-						s += *(rules_token[i][0] + n++);
-					vector<string> vs;
-					vs.push_back("$");
-					q.push(make_pair(s, vs));
+
+					q.push(make_pair(make_pair(s, 1), q.front().second));// (closure NT, closure_position), follows
 				}
-				dr.follows.push_back("$");
 				sta_t.ders.push_back(dr);
 			}
 		}
 	}
+}
+// rules number, closure pos
+string GetClosureToken(int i, int j)
+{
+	if (j < 0)return "";// undefined
+	while (rules_token[i][j] == nullptr)j++;
+	s = *rules_token[i][j];
+	n = 1;
+	while (n < rules_token[i].size()
+		&& (rules_token[i][j] + n) == nullptr)
+		s += *(rules_token[i][j] + n++);
+	return s;
 }
