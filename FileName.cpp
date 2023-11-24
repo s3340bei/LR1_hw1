@@ -47,7 +47,7 @@ string GetClosureToken(int i, int j);
 int main()
 {
 	// read testdata file
-	ifstream ifst("1_testdata.txt", ios::in);
+	ifstream ifst("2_testdata.txt", ios::in);
 	if (!ifst.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -58,7 +58,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("1_grammar.txt", ios::in);
+	ifstream ifs("2_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -183,7 +183,7 @@ int main()
 	firsts[0].insert("$");
 	for (int i = 1; i < rules.size(); i++)
 	{
-		for (int j = 0; j < nonterminals.size(); j++)
+		for (int j = 1; j < nonterminals.size(); j++)
 		{
 			// get the needed rules
 			if (rules[i].first == nonterminals[j])
@@ -194,24 +194,30 @@ int main()
 		}
 	}
 	// nonterminals add into firsts
-	for (int i = 0; i < firsts.size(); i++)
+	for (int i = 1; i < firsts.size(); i++)
 	{
+		vector<string> v;
 		for (auto& j : firsts[i])
 		{
 			if (j[0] >= 'A' && j[0] <= 'Z')
 			{
-				for (int k = 0; k < nonterminals.size(); k++)
+				for (int k = 1; k < nonterminals.size(); k++)
 				{
-					if (j[0] == nonterminals[k][0])
+					if (j == nonterminals[k])
 					{
 						for (auto& l : firsts[k])
 						{
 							firsts[i].insert(l);
 						}
+						break;
 					}
 				}
+				v.push_back(j);
 			}
 		}
+		// remove nonterminal first
+		for (auto& x : v)
+			firsts[i].erase(firsts[i].find(x));
 	}
 
 
@@ -286,10 +292,10 @@ string GetClosureToken(int i, int j)
 		}
 		j = n;
 	}
-	s = *rules_token[i][j];
+	s = *(rules_token[i][j]);
 	n = 1;
 	while (n < rules_token[i].size()
-		&& (rules_token[i][j] + n) == nullptr)
+		&& (rules_token[i][j] + n) != nullptr)
 		s += *(rules_token[i][j] + n++);
 	return s;
 }
