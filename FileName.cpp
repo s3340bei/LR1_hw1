@@ -79,7 +79,11 @@ int main()
 	{
 		if (s[j] != ' ' && s[j] != ',')ter += s[j];
 		else if (s[j] == ',')
+		{
+			if (nonterminals.empty())// push starting
+				nonterminals.push_back(ter + "'");
 			nonterminals.push_back(ter), ter = "";
+		}
 	}
 	if (ter != "")nonterminals.push_back(ter), ter = "";
 	// rules
