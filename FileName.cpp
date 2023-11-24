@@ -42,7 +42,7 @@ bool b;
 queue<pair<pair<string, int>, vector<string>>> q;//(closure NT, closure_position), follows
 
 // functions
-string GetClosureToken();
+string GetClosureToken(int i, int j);
 
 int main()
 {
@@ -175,7 +175,9 @@ int main()
 	queue<pair<int, int>> ruleNumQ;
 	firsts.assign(nonterminals.size(), set<string>());
 	follows.assign(nonterminals.size(), set<string>());
-	for (int i = 0; i < rules.size(); i++)
+	// terminals add into firsts
+	firsts[0].insert("$");
+	for (int i = 1; i < rules.size(); i++)
 	{
 		for (int j = 0; j < nonterminals.size(); j++)
 		{
@@ -183,10 +185,11 @@ int main()
 			if (rules[i].first == nonterminals[j])
 			{
 				s = GetClosureToken(i, 0);
-				firsts[i].insert(s);
+				firsts[j].insert(s);
 			}
 		}
 	}
+	// nonterminals add into firsts
 	for (int i = 0; i < firsts.size(); i++)
 	{
 		for (auto& j : firsts[i])
@@ -197,7 +200,10 @@ int main()
 				{
 					if (j[0] == nonterminals[k][0])
 					{
-						for (auto& l : )
+						for (auto& l : firsts[k])
+						{
+							firsts[i].insert(l);
+						}
 					}
 				}
 			}
