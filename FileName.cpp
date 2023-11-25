@@ -140,6 +140,10 @@ int main()
 				}
 				else if (s[j] == nonterminals[k][0])
 				{
+					bool bb = false;
+					for (int l = j+1; l < nonterminals[k].size(); l++)
+						if (s[l] != nonterminals[k][l - j])bb = true;
+					if (bb)continue;
 					rules_token[i].push_back(&nonterminals[k][0]);
 					for (int l = 0; l < nonterminals[k].size() - 1; l++)
 						rules_token[i].push_back(nullptr);
@@ -163,6 +167,10 @@ int main()
 			{
 				if (s[j] == nonterminals[m][0])
 				{
+					bool bb = false;
+					for (int l = j + 1; l < nonterminals[m].size(); l++)
+						if (s[l] != nonterminals[m][l - j])bb = true;
+					if (bb)continue;
 					rules_token[i].push_back(&nonterminals[m][0]);
 					for (int l = 0; l < nonterminals[m].size() - 1; l++)
 						rules_token[i].push_back(nullptr);
@@ -179,45 +187,54 @@ int main()
 	queue<pair<int, int>> ruleNumQ;
 	firsts.assign(nonterminals.size(), set<string>());
 	follows.assign(nonterminals.size(), set<string>());
+	int count = 0;
 	// terminals add into firsts
-	firsts[0].insert("$");
-	for (int i = 1; i < rules.size(); i++)
+	for (int i = 0; i < rules.size(); i++)
 	{
-		for (int j = 1; j < nonterminals.size(); j++)
+		for (int j = 0; j < nonterminals.size(); j++)
 		{
 			// get the needed rules
 			if (rules[i].first == nonterminals[j])
 			{
 				s = GetClosureToken(i, 0);
 				firsts[j].insert(s);
+				if (s[0] >= 'A' && s[0] <= 'Z')
+					count++;
+				break;
 			}
 		}
 	}
 	// nonterminals add into firsts
-	for (int i = 1; i < firsts.size(); i++)
+	while (count > 0)
 	{
-		vector<string> v;
-		for (auto& j : firsts[i])
+		for (int i = 0; i < firsts.size(); i++)
 		{
-			if (j[0] >= 'A' && j[0] <= 'Z')
+			vector<string> v;
+			for (auto& j : firsts[i])
 			{
-				for (int k = 1; k < nonterminals.size(); k++)
+				if (j[0] >= 'A' && j[0] <= 'Z')// first is nonterminal
 				{
-					if (j == nonterminals[k])
+					bool b = true;
+					for (int k = 0; k < nonterminals.size(); k++)
 					{
-						for (auto& l : firsts[k])
+						if (j == nonterminals[k])
 						{
-							firsts[i].insert(l);
+							for (auto& l : firsts[k])
+							{
+								firsts[i].insert(l);
+								if (l[0] >= 'A' && l[0] <= 'Z')
+									b = false;
+							}
+							break;
 						}
-						break;
 					}
+					if (b)v.push_back(j), count--;
 				}
-				v.push_back(j);
 			}
+			// remove nonterminal first
+			for (auto& x : v)
+				firsts[i].erase(firsts[i].find(x));
 		}
-		// remove nonterminal first
-		for (auto& x : v)
-			firsts[i].erase(firsts[i].find(x));
 	}
 
 
