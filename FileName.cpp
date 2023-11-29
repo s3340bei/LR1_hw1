@@ -157,10 +157,10 @@ void FindFirst()
 	//follows.assign(nonterminals.size(), set<string>());
 	vector<bool> vb;
 	// terminals add into firsts
-	for (int i = 0; i < rules.size(); i++)
+	for (int j = 0; j < nonterminals.size(); j++)
 	{
 		b = true;
-		for (int j = 0; j < nonterminals.size(); j++)
+		for (int i = 0; i < rules.size(); i++)
 		{
 			// get the needed rules
 			if (rules[i].first == nonterminals[j])
@@ -169,31 +169,33 @@ void FindFirst()
 				firsts[j].insert(s);
 				if (s[0] >= 'A' && s[0] <= 'Z')
 					b = false;
-				break;
 			}
 		}
 		vb.push_back(b);
 	}
 	// nonterminals add into firsts
-	for (int i = 0; i < firsts.size(); i++)
+	b = false;
+	while (b == false)
 	{
-		for (auto&j:firsts[i])
+		for (int i = 0; i < firsts.size(); i++)
 		{
-			if (j[0] >= 'A' && j[0] <= 'Z')//first[i][j] is nonterminals.
+			b = true;
+			for (auto& j : firsts[i])
 			{
-				for (int k = 0; k < nonterminals.size(); k++)
+				if (j[0] >= 'A' && j[0] <= 'Z')//first[i][j] is nonterminals.
 				{
-					if (nonterminals[k] == j)
+					for (int k = 0; k < nonterminals.size(); k++)
 					{
-						if (vb[k])// firsts[k] are all terminals.
+						if (nonterminals[k] == j)
 						{
-							firsts[i].erase(firsts[i].find(j));
 							for (auto& l : firsts[k])
+							{
 								firsts[i].insert(l);
-						}
-						else// firsts[k] has nonterminal.
-						{
-
+								if (l[0] >= 'A' && l[0] <= 'Z')
+									b = false;
+							}
+							//firsts[i].erase(firsts[i].find(j));
+							break;
 						}
 					}
 				}
