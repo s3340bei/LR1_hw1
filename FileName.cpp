@@ -67,28 +67,25 @@ string GetClosureToken(int i, int j)
 	s = *(rules_token[i][j]);
 	n = 1;
 	while (n < rules_token[i].size()
-		&& (rules_token[i][j] + n) != nullptr)
+		&& *(rules_token[i][j] + n) != '\0')
 		s += *(rules_token[i][j] + n++);
 	return s;
 }
-//vector<string> GetFirst(string nont)
-//{
-//	//// O(n), n is the number of nonterminals
-//	//vector<string> v;
-//	//for (int i = 0; i < nonterminals.size(); i++)
-//	//{
-//	//	if (nonterminals[i] == nont)
-//	//	{
-//	//		for (auto& k : firsts[i])
-//	//			v.push_back(k);
-//	//		return v;
-//	//	}
-//	//}
-//	//return v;
-//	
-//	// way 2 : first set could be the terminal set or $
-//	return terminals;
-//}
+vector<string> GetFirst(string nont)
+{
+	// O(n), n is the number of nonterminals
+	vector<string> v;
+	for (int i = 0; i < nonterminals.size(); i++)
+	{
+		if (nonterminals[i] == nont)
+		{
+			for (auto& k : firsts[i])
+				v.push_back(k);
+			return v;
+		}
+	}
+	return v;
+}
 void OutputState(sta sta, int sNum)
 {
 	//cout << sNum << " : [[\"" << sta.ders[0].d1 << "->";
@@ -106,16 +103,16 @@ void Closure(int stateNum)
 			dr.d2 = rules[i].second;*/
 			dr.rNum = i;
 			s = GetClosureToken(stateNum, n + 1);
-			if (s != "")
+			if (s != "")// next token is not the end.
 			{
 				dr.follows = terminals;
 				if (s[0] >= 'A' && s[0] <= 'Z')
 					qi.push(sta_0.ders.size());
 			}
-			else
+			else// next token is the end.
 			{
 				dr.follows = der_t.follows;
-				dr.closure_pos = -1;
+				
 			}
 			sta_0.ders.push_back(dr);
 		}
@@ -169,7 +166,8 @@ void FindFirst()
 			if (rules[i].first == nonterminals[j])
 			{
 				s = GetClosureToken(i, 0);
-				firsts[j].insert(s);
+				if (s != nonterminals[j])
+					firsts[j].insert(s);
 				if (s[0] >= 'A' && s[0] <= 'Z')
 					b = false;
 			}
@@ -184,7 +182,7 @@ void FindFirst()
 		b = true;
 		for (int i = 0; i < firsts.size(); i++)
 		{
-			for (auto& j : firsts[i])
+			for (auto j : firsts[i])
 			{
 				if (j[0] >= 'A' && j[0] <= 'Z')//first[i][j] is nonterminals.
 				{
@@ -228,7 +226,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("1_grammar.txt", ios::in);
+	ifstream ifs("2_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -354,7 +352,7 @@ int main()
 
 
 	// find firsts.
-	//FindFirst();
+	FindFirst();
 
 
 
@@ -377,7 +375,7 @@ int main()
 	der_t.follows.push_back("$");
 	der_t.rNum = 0;
 	sta_0.ders.push_back(der_t);
-	Closure(0);
+	//Closure(0);
 	// output state 0
 
 }
