@@ -14,7 +14,7 @@ vector<pair<string, string>> rules;
 vector<vector<char*>> rules_token;
 vector<string> testdata;
 vector<set<string>> firsts;
-vector<set<string>> follows;
+//vector<set<string>> follows;
 struct der		// d1->d2,follows
 {
 	string d1;
@@ -30,7 +30,6 @@ struct sta
 	map<string, int> GoTo;
 };
 vector<sta> states;
-int stateNum = 0;
 
 // tmp variable
 string s;
@@ -39,15 +38,174 @@ pair<string, string> pa;
 int n;
 const vector<char*> empty_v;
 bool b;
-queue<pair<pair<string, int>, vector<string>>> q;//(closure NT, closure_position), follows
+// State 0
+sta sta_0;
+der der_t;
 
 // functions
-string GetClosureToken(int i, int j);
+
+// rules number, closure pos
+string GetClosureToken(int i, int j)
+{
+	if (j < 0)return "";// undefined
+	if (j > 0)
+	{
+		n = 1;
+		if (n > rules_token[i].size() - 1)return "";
+		int itg = 1;
+		while (itg < j)
+		{
+			while (rules_token[i][n] == nullptr)
+			{
+				if (n > rules_token[i].size() - 1)return "";// end
+				n++;
+			}
+			itg++;
+		}
+		j = n;
+	}
+	s = *(rules_token[i][j]);
+	n = 1;
+	while (n < rules_token[i].size()
+		&& (rules_token[i][j] + n) != nullptr)
+		s += *(rules_token[i][j] + n++);
+	return s;
+}
+vector<string> GetFirst(string nont)
+{
+	// O(n), n is the number of nonterminals
+	vector<string> v;
+	for (int i = 0; i < nonterminals.size(); i++)
+	{
+		if (nonterminals[i] == nont)
+		{
+			for (auto& k : firsts[i])
+				v.push_back(k);
+			return v;
+		}
+	}
+	return v;
+}
+void OutputState(sta sta, int sNum)
+{
+	cout << sNum << " : [[\"" << sta.ders[0].d1 << "->";
+}
+void Closure(int stateNum)
+{
+	string st = GetClosureToken(stateNum, der_t.closure_pos);
+	queue<int> qi;
+	for (int i = 0; i < rules.size(); i++)
+	{
+		if (rules[i].first == st)//find the derivations
+		{
+			der dr;
+			dr.d1 = rules[i].first;
+			dr.d2 = rules[i].second;
+			dr.rNum = i;
+			s = GetClosureToken(stateNum, n + 1);
+			if (s != "")
+			{
+				dr.follows = GetFirst(s);
+				if (s[0] >= 'A' && s[0] <= 'Z')
+					qi.push(sta_0.ders.size());
+			}
+			else
+			{
+				dr.follows = der_t.follows;
+				dr.closure_pos = -1;
+			}
+			sta_0.ders.push_back(dr);
+		}
+	}
+	while (!qi.empty())
+	{
+		n = qi.front();
+		qi.pop();
+		der_t = sta_0.ders[n];
+		st = GetClosureToken(der_t.rNum, der_t.closure_pos);
+		for (int i = 0; i < rules.size(); i++)
+		{
+			if (rules[i].first == st)//find the derivations
+			{
+				der dr;
+				dr.d1 = rules[i].first;
+				dr.d2 = rules[i].second;
+				dr.rNum = i;
+				dr.closure_pos = der_t.closure_pos + 1;
+				s = GetClosureToken(n, dr.closure_pos);
+				if (s != "")
+				{
+					dr.follows = GetFirst(s);
+					if (s[0] >= 'A' && s[0] <= 'Z')
+						qi.push(sta_0.ders.size());
+				}
+				else
+				{
+					dr.follows = der_t.follows;
+					dr.closure_pos = -1;
+				}
+				sta_0.ders.push_back(dr);
+			}
+		}
+	}
+	states.push_back(sta_0);
+	OutputState(sta_0, stateNum);
+}
+void FindFirst()
+{
+	firsts.assign(nonterminals.size(), set<string>());
+	//follows.assign(nonterminals.size(), set<string>());
+	vector<bool> vb;
+	// terminals add into firsts
+	for (int i = 0; i < rules.size(); i++)
+	{
+		b = true;
+		for (int j = 0; j < nonterminals.size(); j++)
+		{
+			// get the needed rules
+			if (rules[i].first == nonterminals[j])
+			{
+				s = GetClosureToken(i, 0);
+				firsts[j].insert(s);
+				if (s[0] >= 'A' && s[0] <= 'Z')
+					b = false;
+				break;
+			}
+		}
+		vb.push_back(b);
+	}
+	// nonterminals add into firsts
+	for (int i = 0; i < firsts.size(); i++)
+	{
+		for (auto&j:firsts[i])
+		{
+			if (j[0] >= 'A' && j[0] <= 'Z')//first[i][j] is nonterminals.
+			{
+				for (int k = 0; k < nonterminals.size(); k++)
+				{
+					if (nonterminals[k] == j)
+					{
+						if (vb[k])// firsts[k] are all terminals.
+						{
+							firsts[i].erase(firsts[i].find(j));
+							for (auto& l : firsts[k])
+								firsts[i].insert(l);
+						}
+						else// firsts[k] has nonterminal.
+						{
+
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 int main()
 {
 	// read testdata file
-	ifstream ifst("2_testdata.txt", ios::in);
+	ifstream ifst("1_testdata.txt", ios::in);
 	if (!ifst.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -58,7 +216,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("2_grammar.txt", ios::in);
+	ifstream ifs("1_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -181,63 +339,8 @@ int main()
 		}
 	}
 
-
-
-	// find firsts and follows
-	queue<pair<int, int>> ruleNumQ;
-	firsts.assign(nonterminals.size(), set<string>());
-	follows.assign(nonterminals.size(), set<string>());
-	int count = 0;
-	// terminals add into firsts
-	for (int i = 0; i < rules.size(); i++)
-	{
-		for (int j = 0; j < nonterminals.size(); j++)
-		{
-			// get the needed rules
-			if (rules[i].first == nonterminals[j])
-			{
-				s = GetClosureToken(i, 0);
-				firsts[j].insert(s);
-				if (s[0] >= 'A' && s[0] <= 'Z')
-					count++;
-				break;
-			}
-		}
-	}
-	// nonterminals add into firsts
-	while (count > 0)
-	{
-		for (int i = 0; i < firsts.size(); i++)
-		{
-			vector<string> v;
-			for (auto& j : firsts[i])
-			{
-				if (j[0] >= 'A' && j[0] <= 'Z')// first is nonterminal
-				{
-					bool b = true;
-					for (int k = 0; k < nonterminals.size(); k++)
-					{
-						if (j == nonterminals[k])
-						{
-							for (auto& l : firsts[k])
-							{
-								firsts[i].insert(l);
-								if (l[0] >= 'A' && l[0] <= 'Z')
-									b = false;
-							}
-							break;
-						}
-					}
-					if (b)v.push_back(j), count--;
-				}
-			}
-			// remove nonterminal first
-			for (auto& x : v)
-				firsts[i].erase(firsts[i].find(x));
-		}
-	}
-
-
+	// find firsts.
+	FindFirst();
 
 
 	// FA && parsing table
@@ -252,67 +355,14 @@ int main()
 	cout << "]\n";
 	// line 2
 	cout << "///////////////// state ////////////////////\n";
-
-	// State 0
-	sta sta_t;
-	der der_t;
+	
+	// E'->E
 	der_t.d1 = rules[0].first;
 	der_t.d2 = rules[0].second;
 	der_t.follows.push_back("$");
 	der_t.rNum = 0;
-	// S->.AA
-	if (*rules_token[0][0] >= 'A' && *rules_token[0][0] <= 'Z')
-	{
-		s = GetClosureToken(0, 0);
-		vector<string> vs;
-		vs.push_back("$");
-		q.push(make_pair(make_pair(s, 1), vs));// (closure NT, closure_position), follows
-	}
-	sta_t.ders.push_back(der_t);
+	sta_0.ders.push_back(der_t);
+	//Closure(0);
+	// output state 0
 
-	// closure
-	while (!q.empty())
-	{
-		ter = q.front().first.first;
-		for (int i = 0; i < rules.size(); i++)
-		{
-			if (rules[i].first == ter)
-			{
-				der dr;
-				dr.d1 = rules[i].first;
-				dr.d2 = rules[i].second;
-				dr.rNum = i;
-				s = GetClosureToken(i, 0);
-				// check if closure end
-				if (s[0] >= 'A' && s[0] <= 'Z')
-				{
-
-					q.push(make_pair(make_pair(s, 1), q.front().second));// (closure NT, closure_position), follows
-				}
-				sta_t.ders.push_back(dr);
-			}
-		}
-	}
-}
-// rules number, closure pos
-string GetClosureToken(int i, int j)
-{
-	if (j < 0)return "";// undefined
-	if (j > 0)
-	{
-		n = 1;
-		int itg = 1;
-		while (itg < j)
-		{
-			while (rules_token[i][n] == nullptr)n++;
-			itg++;
-		}
-		j = n;
-	}
-	s = *(rules_token[i][j]);
-	n = 1;
-	while (n < rules_token[i].size()
-		&& (rules_token[i][j] + n) != nullptr)
-		s += *(rules_token[i][j] + n++);
-	return s;
 }
