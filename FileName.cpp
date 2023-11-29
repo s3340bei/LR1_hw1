@@ -17,8 +17,8 @@ vector<set<string>> firsts;
 //vector<set<string>> follows;
 struct der		// d1->d2,follows
 {
-	string d1;
-	string d2;
+	/*string d1;
+	string d2;*/
 	int closure_pos = 0;//-1 denotes end position
 	int rNum;// rules numr
 	vector<string> follows;
@@ -71,24 +71,27 @@ string GetClosureToken(int i, int j)
 		s += *(rules_token[i][j] + n++);
 	return s;
 }
-vector<string> GetFirst(string nont)
-{
-	// O(n), n is the number of nonterminals
-	vector<string> v;
-	for (int i = 0; i < nonterminals.size(); i++)
-	{
-		if (nonterminals[i] == nont)
-		{
-			for (auto& k : firsts[i])
-				v.push_back(k);
-			return v;
-		}
-	}
-	return v;
-}
+//vector<string> GetFirst(string nont)
+//{
+//	//// O(n), n is the number of nonterminals
+//	//vector<string> v;
+//	//for (int i = 0; i < nonterminals.size(); i++)
+//	//{
+//	//	if (nonterminals[i] == nont)
+//	//	{
+//	//		for (auto& k : firsts[i])
+//	//			v.push_back(k);
+//	//		return v;
+//	//	}
+//	//}
+//	//return v;
+//	
+//	// way 2 : first set could be the terminal set or $
+//	return terminals;
+//}
 void OutputState(sta sta, int sNum)
 {
-	cout << sNum << " : [[\"" << sta.ders[0].d1 << "->";
+	//cout << sNum << " : [[\"" << sta.ders[0].d1 << "->";
 }
 void Closure(int stateNum)
 {
@@ -99,13 +102,13 @@ void Closure(int stateNum)
 		if (rules[i].first == st)//find the derivations
 		{
 			der dr;
-			dr.d1 = rules[i].first;
-			dr.d2 = rules[i].second;
+			/*dr.d1 = rules[i].first;
+			dr.d2 = rules[i].second;*/
 			dr.rNum = i;
 			s = GetClosureToken(stateNum, n + 1);
 			if (s != "")
 			{
-				dr.follows = GetFirst(s);
+				dr.follows = terminals;
 				if (s[0] >= 'A' && s[0] <= 'Z')
 					qi.push(sta_0.ders.size());
 			}
@@ -128,14 +131,14 @@ void Closure(int stateNum)
 			if (rules[i].first == st)//find the derivations
 			{
 				der dr;
-				dr.d1 = rules[i].first;
-				dr.d2 = rules[i].second;
+				/*dr.d1 = rules[i].first;
+				dr.d2 = rules[i].second;*/
 				dr.rNum = i;
 				dr.closure_pos = der_t.closure_pos + 1;
 				s = GetClosureToken(n, dr.closure_pos);
 				if (s != "")
 				{
-					dr.follows = GetFirst(s);
+					dr.follows = terminals;
 					if (s[0] >= 'A' && s[0] <= 'Z')
 						qi.push(sta_0.ders.size());
 				}
@@ -175,11 +178,12 @@ void FindFirst()
 	}
 	// nonterminals add into firsts
 	b = false;
+	queue<string> qs;
 	while (b == false)
 	{
+		b = true;
 		for (int i = 0; i < firsts.size(); i++)
 		{
-			b = true;
 			for (auto& j : firsts[i])
 			{
 				if (j[0] >= 'A' && j[0] <= 'Z')//first[i][j] is nonterminals.
@@ -194,11 +198,17 @@ void FindFirst()
 								if (l[0] >= 'A' && l[0] <= 'Z')
 									b = false;
 							}
-							//firsts[i].erase(firsts[i].find(j));
+							qs.push(j);//delete the old nonterminals.
 							break;
 						}
 					}
 				}
+			}
+			while (!qs.empty())//delete the old nonterminals.
+			{
+				ter = qs.front(); 
+				qs.pop();
+				firsts[i].erase(firsts[i].find(ter));
 			}
 		}
 	}
@@ -341,8 +351,11 @@ int main()
 		}
 	}
 
+
+
 	// find firsts.
-	FindFirst();
+	//FindFirst();
+
 
 
 	// FA && parsing table
@@ -359,12 +372,12 @@ int main()
 	cout << "///////////////// state ////////////////////\n";
 	
 	// E'->E
-	der_t.d1 = rules[0].first;
-	der_t.d2 = rules[0].second;
+	/*der_t.d1 = rules[0].first;
+	der_t.d2 = rules[0].second;*/
 	der_t.follows.push_back("$");
 	der_t.rNum = 0;
 	sta_0.ders.push_back(der_t);
-	//Closure(0);
+	Closure(0);
 	// output state 0
 
 }
