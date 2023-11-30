@@ -2,8 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <map>
 #include <queue>
+#include <map>
 #include <set>
 using namespace std;
 
@@ -14,11 +14,8 @@ vector<pair<string, string>> rules;
 vector<vector<char*>> rules_token;
 vector<string> testdata;
 vector<set<string>> firsts;
-//vector<set<string>> follows;
-struct der		// d1->d2,follows
+struct der
 {
-	/*string d1;
-	string d2;*/
 	int closure_pos = 0;//-1 denotes end position
 	int rNum;// rules numr
 	vector<string> follows;
@@ -38,8 +35,6 @@ pair<string, string> pa;
 int n;
 const vector<char*> empty_v;
 bool b;
-// State 0
-sta sta_0;
 der der_t;
 
 // functions
@@ -47,6 +42,7 @@ der der_t;
 // rules number, closure pos
 string GetClosureToken(int i, int j)
 {
+	string str;
 	if (j < 0)return "";// undefined
 	if (j > 0)
 	{
@@ -64,12 +60,12 @@ string GetClosureToken(int i, int j)
 		}
 		j = n;
 	}
-	s = *(rules_token[i][j]);
+	str = *(rules_token[i][j]);
 	n = 1;
 	while (n < rules_token[i].size()
 		&& *(rules_token[i][j] + n) != '\0')
-		s += *(rules_token[i][j] + n++);
-	return s;
+		str += *(rules_token[i][j] + n++);
+	return str;
 }
 vector<string> GetFirst(string nont)
 {
@@ -86,65 +82,106 @@ vector<string> GetFirst(string nont)
 	}
 	return v;
 }
-void OutputState(sta sta, int sNum)
+void OutputDerivation(der d)
 {
-	//cout << sNum << " : [[\"" << sta.ders[0].d1 << "->";
-}
-void Closure(int stateNum)
-{
-	string st = GetClosureToken(stateNum, der_t.closure_pos);
-	queue<int> qi;
-	for (int i = 0; i < rules.size(); i++)
+	// check is "" or ''
+	char c = '\'';
+	for (auto& i : rules[d.rNum].first)
 	{
-		if (rules[i].first == st)//find the derivations
+		if (i == '\'')
 		{
-			der dr;
-			/*dr.d1 = rules[i].first;
-			dr.d2 = rules[i].second;*/
-			dr.rNum = i;
-			s = GetClosureToken(stateNum, n + 1);
-			if (s != "")// next token is not the end.
-			{
-				dr.follows = terminals;
-				if (s[0] >= 'A' && s[0] <= 'Z')
-					qi.push(sta_0.ders.size());
-			}
-			else// next token is the end.
-			{
-				dr.follows = der_t.follows;
-				
-			}
-			sta_0.ders.push_back(dr);
+			c = '\"'; 
+			break;
 		}
 	}
+	// output nonterminal
+	cout << "[" << c << rules[d.rNum].first << "->";
+	// output derivation
+	if (d.closure_pos == 0)
+		cout << "." << rules[d.rNum].second;
+	else if (d.closure_pos == -1)
+		cout << rules[d.rNum].second << ".";
+	else
+	{
+		n = 0;
+		do
+		{
+			if (n == d.rNum)cout << ".";
+			s = GetClosureToken(d.rNum, n++);
+			cout << s;
+		} while (s != "");
+	}
+	// output follow
+	cout << c << ", [\'" << d.follows[0] << "\'";
+	for (int i = 1; i < d.follows.size(); i++)
+	{
+		cout << ", \'" << d.follows[i] << "\'";
+	}
+	cout << "]";
+}
+void OutputState(sta sta, int sNum)
+{
+	cout << sNum << " : [";
+	OutputDerivation(sta.ders[0]);
+	for (int i = 1; i < sta.ders.size();i++)
+	{
+		cout << ", ";
+		OutputDerivation(sta.ders[i]);
+	}
+	cout << "]\n";
+}
+void Closure_1(int stateNum)
+{
+	// State 1
+	sta sta_1;
+
+
+}
+void Closure_0(int stateNum)
+{
+	// State 0
+	sta sta_0;
+	der_t.follows.clear();
+	der_t.follows.push_back("$");
+	der_t.rNum = 0;
+	sta_0.ders.push_back(der_t);
+	string st;
+	queue<int> qi;// store the un_closure derNum in state i
+	qi.push(0);
 	while (!qi.empty())
 	{
 		n = qi.front();
 		qi.pop();
 		der_t = sta_0.ders[n];
 		st = GetClosureToken(der_t.rNum, der_t.closure_pos);
-		for (int i = 0; i < rules.size(); i++)
+		if (st[0] >= 'A' && st[0] <= 'Z')// if the clo_pos is nonterminal
 		{
-			if (rules[i].first == st)//find the derivations
+			for (int i = 0; i < rules.size(); i++)
 			{
-				der dr;
-				/*dr.d1 = rules[i].first;
-				dr.d2 = rules[i].second;*/
-				dr.rNum = i;
-				dr.closure_pos = der_t.closure_pos + 1;
-				s = GetClosureToken(n, dr.closure_pos);
-				if (s != "")
+				if (rules[i].first == st)//find the closure derivations
 				{
-					dr.follows = terminals;
-					if (s[0] >= 'A' && s[0] <= 'Z')
-						qi.push(sta_0.ders.size());
+					der dr;
+					dr.rNum = i;
+					s = GetClosureToken(i, dr.closure_pos);
+					if (s != "")// next token is not the end.
+					{
+						if (s[0] < 'A' || s[0] > 'Z')//s is terminal
+						{
+							dr.follows = GetFirst(GetClosureToken(der_t.rNum, der_t.closure_pos + 1));
+						}
+						else// s is nonterminal
+						{
+							dr.follows = der_t.follows;
+							qi.push(sta_0.ders.size());// push the der pos
+						}
+					}
+					else// next token is the end. == closure end.
+					{
+						dr.follows = der_t.follows;
+						dr.closure_pos = -1;
+					}
+					sta_0.ders.push_back(dr);
 				}
-				else
-				{
-					dr.follows = der_t.follows;
-					dr.closure_pos = -1;
-				}
-				sta_0.ders.push_back(dr);
 			}
 		}
 	}
@@ -204,7 +241,7 @@ void FindFirst()
 			}
 			while (!qs.empty())//delete the old nonterminals.
 			{
-				ter = qs.front(); 
+				ter = qs.front();
 				qs.pop();
 				firsts[i].erase(firsts[i].find(ter));
 			}
@@ -226,7 +263,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("2_grammar.txt", ios::in);
+	ifstream ifs("1_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -309,7 +346,7 @@ int main()
 				else if (s[j] == nonterminals[k][0])
 				{
 					bool bb = false;
-					for (int l = j+1; l < nonterminals[k].size(); l++)
+					for (int l = j + 1; l < nonterminals[k].size(); l++)
 						if (s[l] != nonterminals[k][l - j])bb = true;
 					if (bb)continue;
 					rules_token[i].push_back(&nonterminals[k][0]);
@@ -348,34 +385,18 @@ int main()
 			}
 		}
 	}
-
-
-
 	// find firsts.
 	FindFirst();
 
 
 
-	// FA && parsing table
-	// line 1
-	cout << "[\"" <<
-		rules[0].first << "->." << rules[0].second << "\"";// S'->.S
+	// output states
+	cout << "[\"" << rules[0].first << "->." << rules[0].second << "\"";
 	for (auto& i : rules)
 	{
 		if (i != rules[0])
 			cout << ", \'" << i.first << "->" << i.second << "\'";
 	}
-	cout << "]\n";
-	// line 2
-	cout << "///////////////// state ////////////////////\n";
-	
-	// E'->E
-	/*der_t.d1 = rules[0].first;
-	der_t.d2 = rules[0].second;*/
-	der_t.follows.push_back("$");
-	der_t.rNum = 0;
-	sta_0.ders.push_back(der_t);
-	//Closure(0);
-	// output state 0
-
+	cout << "]\n///////////////// state ////////////////////\n";
+	Closure_0(0);
 }
