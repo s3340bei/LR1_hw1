@@ -141,11 +141,11 @@ void Closure_0(int stateNum)
 {
 	// State 0
 	sta sta_0;
+	// derivations need to be closure
 	der_t.follows.clear();
 	der_t.follows.push_back("$");
 	der_t.rNum = 0;
 	sta_0.ders.push_back(der_t);
-	string st;
 	queue<int> qi;// store the un_closure derNum in state i
 	qi.push(0);
 	while (!qi.empty())
@@ -153,7 +153,7 @@ void Closure_0(int stateNum)
 		n = qi.front();
 		qi.pop();
 		der_t = sta_0.ders[n];
-		st = GetClosureToken(der_t.rNum, der_t.closure_pos);
+		string st = GetClosureToken(der_t.rNum, der_t.closure_pos);
 		if (st[0] >= 'A' && st[0] <= 'Z')// if the clo_pos is nonterminal
 		{
 			for (int i = 0; i < rules.size(); i++)
@@ -162,24 +162,18 @@ void Closure_0(int stateNum)
 				{
 					der dr;
 					dr.rNum = i;
-					s = GetClosureToken(i, dr.closure_pos);
-					if (s != "")// next token is not the end.
-					{
-						if (s[0] < 'A' || s[0] > 'Z')//s is terminal
-						{
-							dr.follows = GetFirst(GetClosureToken(der_t.rNum, der_t.closure_pos + 1));
-						}
-						else// s is nonterminal
-						{
-							dr.follows = der_t.follows;
-							qi.push(sta_0.ders.size());// push the der pos
-						}
-					}
-					else// next token is the end. == closure end.
-					{
+					// decied next token whether need to closure
+					s = GetClosureToken(i, 0);
+					if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
+						qi.push(sta_0.ders.size());// push the der pos
+					// find dr.follow
+					s = GetClosureToken(der_t.rNum, der_t.closure_pos + 1);
+					if (s == "")// next token of der_t is the end. => follow
 						dr.follows = der_t.follows;
-						dr.closure_pos = -1;
-					}
+					else if(s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
+						dr.follows = GetFirst(s);
+					else //next token of der_t is terminal
+						dr.follows.push_back(s);
 					sta_0.ders.push_back(dr);
 				}
 			}
@@ -263,7 +257,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("1_grammar.txt", ios::in);
+	ifstream ifs("2_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
