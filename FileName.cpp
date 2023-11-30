@@ -18,7 +18,13 @@ struct der
 {
 	int closure_pos = 0;//-1 denotes end position
 	int rNum;// rules numr
-	vector<string> follows;
+	set<string> follows;
+	bool operator==(der d)
+	{
+		if (closure_pos != d.closure_pos)return false;
+		if (rNum != d.rNum)return false;
+		if (follows != d.follows)return false;
+	}
 };
 struct sta
 {
@@ -67,20 +73,12 @@ string GetClosureToken(int i, int j)
 		str += *(rules_token[i][j] + n++);
 	return str;
 }
-vector<string> GetFirst(string nont)
+set<string> GetFirst(string nont)
 {
 	// O(n), n is the number of nonterminals
-	vector<string> v;
 	for (int i = 0; i < nonterminals.size(); i++)
-	{
-		if (nonterminals[i] == nont)
-		{
-			for (auto& k : firsts[i])
-				v.push_back(k);
-			return v;
-		}
-	}
-	return v;
+		if (nonterminals[i] == nont)return firsts[i];
+	return firsts[0];
 }
 void OutputDerivation(der d)
 {
@@ -112,11 +110,10 @@ void OutputDerivation(der d)
 		} while (s != "");
 	}
 	// output follow
-	cout << c << ", [\'" << d.follows[0] << "\'";
-	for (int i = 1; i < d.follows.size(); i++)
-	{
-		cout << ", \'" << d.follows[i] << "\'";
-	}
+	auto it = d.follows.begin();
+	cout << c << ", [\'" << *it++ << "\'";
+	while (it != d.follows.end())
+		cout << ", \'" << *it++ << "\'";
 	cout << "]";
 }
 void OutputState(sta sta, int sNum)
@@ -143,7 +140,7 @@ void Closure_0(int stateNum)
 	sta sta_0;
 	// derivations need to be closure
 	der_t.follows.clear();
-	der_t.follows.push_back("$");
+	der_t.follows.insert("$");
 	der_t.rNum = 0;
 	sta_0.ders.push_back(der_t);
 	queue<int> qi;// store the un_closure derNum in state i
@@ -162,19 +159,31 @@ void Closure_0(int stateNum)
 				{
 					der dr;
 					dr.rNum = i;
+
 					// decied next token whether need to closure
 					s = GetClosureToken(i, 0);
 					if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
 						qi.push(sta_0.ders.size());// push the der pos
+
 					// find dr.follow
 					s = GetClosureToken(der_t.rNum, der_t.closure_pos + 1);
 					if (s == "")// next token of der_t is the end. => follow
 						dr.follows = der_t.follows;
-					else if(s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
+					else if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
 						dr.follows = GetFirst(s);
 					else //next token of der_t is terminal
-						dr.follows.push_back(s);
-					sta_0.ders.push_back(dr);
+						dr.follows.insert(s);
+					b = true;
+					for (auto& j : sta_0.ders)
+					{
+						if (j == dr)
+						{
+							b = false;
+							break;
+						}
+					}
+					if (b == true)
+						sta_0.ders.push_back(dr);
 				}
 			}
 		}
@@ -257,7 +266,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("2_grammar.txt", ios::in);
+	ifstream ifs("1_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
