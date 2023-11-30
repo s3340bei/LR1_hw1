@@ -148,7 +148,7 @@ void Closure_0(int stateNum)
 	while (!qi.empty())
 	{
 		n = qi.front();
-		qi.pop();
+		while (!qi.empty() && qi.front() == n)qi.pop();
 		der_t = sta_0.ders[n];
 		string st = GetClosureToken(der_t.rNum, der_t.closure_pos);
 		if (st[0] >= 'A' && st[0] <= 'Z')// if the clo_pos is nonterminal
