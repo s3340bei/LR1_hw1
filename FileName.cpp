@@ -29,10 +29,13 @@ struct der
 struct sta
 {
 	vector<der> ders;
-	map<string, string> actions;
-	map<string, int> GoTo;
+	/*map<string, string> actions;
+	map<string, int> GoTo;*/
 };
 vector<sta> states;
+vector<string> ruleToken0;
+int stateNum = 0;
+
 
 // tmp variable
 string s;
@@ -48,7 +51,8 @@ der der_t;
 // rules number, closure pos
 string GetClosureToken(int i, int j)
 {
-	string str;
+	if (ruleToken0.size() > i && j == 0)
+		return ruleToken0[i];
 	if (j < 0)return "";// undefined
 	if (j > 0)
 	{
@@ -66,6 +70,7 @@ string GetClosureToken(int i, int j)
 		}
 		j = n;
 	}
+	string str;
 	str = *(rules_token[i][j]);
 	n = 1;
 	while (n < rules_token[i].size()
@@ -88,7 +93,7 @@ void OutputDerivation(der d)
 	{
 		if (i == '\'')
 		{
-			c = '\"'; 
+			c = '\"';
 			break;
 		}
 	}
@@ -120,21 +125,31 @@ void OutputState(sta sta, int sNum)
 {
 	cout << sNum << " : [";
 	OutputDerivation(sta.ders[0]);
-	for (int i = 1; i < sta.ders.size();i++)
+	for (int i = 1; i < sta.ders.size(); i++)
 	{
 		cout << ", ";
 		OutputDerivation(sta.ders[i]);
 	}
 	cout << "]\n";
 }
-void Closure_1(int stateNum)
+void Closure_Depart(sta sta1)
 {
-	// State 1
-	sta sta_1;
+	// nonterminals closure
+	for (int i = 0; i < nonterminals.size(); i++)
+	{
+		sta sta_t;// state for nonterminals i
+		for (int j = 0; j < sta1.ders.size(); j++)
+		{
+			string str3 = GetClosureToken(sta1.ders[j].rNum, sta1.ders[j].closure_pos);
+			if (str3 == nonterminals[i])// find the nonterminal i 
+			{
 
-
+			}
+		}
+	}
+	// terminal closure
 }
-void Closure_0(int stateNum)
+void Closure_0()
 {
 	// State 0
 	sta sta_0;
@@ -160,7 +175,7 @@ void Closure_0(int stateNum)
 					der dr;
 					dr.rNum = i;
 
-					// decied next token whether need to closure
+					// decied next token of this closure whether need to closure
 					s = GetClosureToken(i, 0);
 					if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
 						qi.push(sta_0.ders.size());// push the der pos
@@ -205,7 +220,7 @@ void FindFirst()
 			// get the needed rules
 			if (rules[i].first == nonterminals[j])
 			{
-				s = GetClosureToken(i, 0);
+				s = ruleToken0[i];
 				if (s != nonterminals[j])
 					firsts[j].insert(s);
 				if (s[0] >= 'A' && s[0] <= 'Z')
@@ -388,9 +403,13 @@ int main()
 			}
 		}
 	}
+	// store rule token 0
+	for (int i = 0; i < rules.size(); i++)
+	{
+		ruleToken0.push_back(GetClosureToken(i, 0));
+	}
 	// find firsts.
 	FindFirst();
-
 
 
 	// output states
@@ -401,5 +420,5 @@ int main()
 			cout << ", \'" << i.first << "->" << i.second << "\'";
 	}
 	cout << "]\n///////////////// state ////////////////////\n";
-	Closure_0(0);
+	Closure_0();
 }
