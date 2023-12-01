@@ -34,7 +34,6 @@ struct sta
 	map<string, int> GoTo;
 };
 vector<sta> states;
-vector<string> ruleToken0;
 int stateNum = 0;
 vector<vector<string>> rulesToken_departed;
 
@@ -51,38 +50,38 @@ der der_t;
 // functions
 
 // rules number, closure pos
-string GetClosureToken(int i, int j)
-{
-	int nt;
-	if (j >= rules_token[i].size())
-		return "";
-	if (ruleToken0.size() > i && j == 0)
-		return ruleToken0[i];
-	if (j < 0)return "";// undefined
-	if (j > 0)
-	{
-		nt = 1;
-		if (nt > rules_token[i].size() - 1)return "";
-		int itg = 1;
-		while (itg < j)
-		{
-			while (rules_token[i][nt] == nullptr)
-			{
-				if (nt > rules_token[i].size() - 1)return "";// end
-			}
-			itg++;
-			nt++;
-		}
-		j = nt;
-	}
-	string str;
-	str = *(rules_token[i][j]);
-	nt = 1;
-	while (nt < rules_token[i].size()
-		&& *(rules_token[i][j] + nt) != '\0')
-		str += *(rules_token[i][j] + nt++);
-	return str;
-}
+//string GetClosureToken(int i, int j)
+//{
+//	int nt;
+//	if (j >= rules_token[i].size())
+//		return "";
+//	if (ruleToken0.size() > i && j == 0)
+//		return ruleToken0[i];
+//	if (j < 0)return "";// undefined
+//	if (j > 0)
+//	{
+//		nt = 1;
+//		if (nt > rules_token[i].size() - 1)return "";
+//		int itg = 1;
+//		while (itg < j)
+//		{
+//			while (rules_token[i][nt] == nullptr)
+//			{
+//				if (nt > rules_token[i].size() - 1)return "";// end
+//			}
+//			itg++;
+//			nt++;
+//		}
+//		j = nt;
+//	}
+//	string str;
+//	str = *(rules_token[i][j]);
+//	nt = 1;
+//	while (nt < rules_token[i].size()
+//		&& *(rules_token[i][j] + nt) != '\0')
+//		str += *(rules_token[i][j] + nt++);
+//	return str;
+//}
 set<string> GetFirst(string nont)
 {
 	// O(n), n is the number of nonterminals
@@ -112,12 +111,12 @@ void OutputDerivation(der d)
 	else
 	{
 		int in = 0;
-		do
+		while (in < rulesToken_departed[d.rNum].size())
 		{
 			if (in == d.rNum)cout << ".";
-			s = GetClosureToken(d.rNum, in++);
+			s = rulesToken_departed[d.rNum][in++];
 			cout << s;
-		} while (s != "" && s != "-1");
+		}
 	}
 	// output follow
 	auto it = d.follows.begin();
@@ -151,7 +150,7 @@ void FindFirst()
 			// get the needed rules
 			if (rules[i].first == nonterminals[j])
 			{
-				s = ruleToken0[i];
+				s = rulesToken_departed[i][0];
 				if (s != nonterminals[j])
 					firsts[j].insert(s);
 				if (s[0] >= 'A' && s[0] <= 'Z')
@@ -334,11 +333,6 @@ int main()
 			}
 		}
 	}
-	// store rule token 0
-	for (int i = 0; i < rules.size(); i++)
-	{
-		ruleToken0.push_back(GetClosureToken(i, 0));
-	}
 	// store rule token
 	rulesToken_departed.assign(rules.size(), vector<string>());
 	for (int i = 0; i < rules.size(); i++)
@@ -386,7 +380,7 @@ int main()
 		n = qi.front();
 		while (!qi.empty() && qi.front() == n)qi.pop();
 		der_t = sta_0.ders[n];
-		string st = GetClosureToken(der_t.rNum, der_t.closure_pos);
+		string st = rulesToken_departed[der_t.rNum][der_t.closure_pos];
 		if (st[0] >= 'A' && st[0] <= 'Z')// if the clo_pos is nonterminal
 		{
 			for (int i = 0; i < rules.size(); i++)
@@ -397,18 +391,21 @@ int main()
 					dr.rNum = i;
 
 					// decied next token of this closure whether need to closure
-					s = ruleToken0[i];
+					s = rulesToken_departed[i][0];
 					if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
 						qi.push(sta_0.ders.size());// push the der pos
 
 					// find dr.follow
-					s = GetClosureToken(der_t.rNum, der_t.closure_pos + 1);
-					if (s == "")// next token of der_t is the end. => follow
+					if (der_t.closure_pos + 1 >= rulesToken_departed[der_t.rNum].size())// next token of der_t is the end. => follow
 						dr.follows = der_t.follows;
-					else if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
-						dr.follows = GetFirst(s);
-					else //next token of der_t is terminal
-						dr.follows.insert(s);
+					else 
+					{
+						s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
+						if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
+							dr.follows = GetFirst(s);
+						else //next token of der_t is terminal
+							dr.follows.insert(s);
+					}
 					// check whether the derivation exits
 					b = true;
 					for (auto& j : sta_0.ders)
@@ -436,7 +433,7 @@ int main()
 		sta sta_tmp;// state for nonterminals i
 		for (int j = 0; j < sta_0.ders.size(); j++)
 		{
-			string str3 = GetClosureToken(sta_0.ders[j].rNum, sta_0.ders[j].closure_pos);
+			string str3 = rulesToken_departed[sta_0.ders[j].rNum][sta_0.ders[j].closure_pos];
 			if (str3 == nonterminals[i])// find the nonterminal i 
 			{
 				der_t = sta_0.ders[j];
@@ -469,7 +466,7 @@ int main()
 		sta sta_tmp;// state for terminals i
 		for (int j = 0; j < sta_0.ders.size(); j++)
 		{
-			string str3 = GetClosureToken(sta_0.ders[j].rNum, sta_0.ders[j].closure_pos);
+			string str3 = rulesToken_departed[sta_0.ders[j].rNum][sta_0.ders[j].closure_pos];
 			if (str3 == terminals[i])// find the terminal i 
 			{
 				der_t = sta_0.ders[j];
@@ -507,7 +504,7 @@ int main()
 			n = qi.front();
 			while (!qi.empty() && qi.front() == n)qi.pop();
 			der_t = states[stateNum].ders[n];
-			string st = GetClosureToken(der_t.rNum, der_t.closure_pos);
+			string st = rulesToken_departed[der_t.rNum][der_t.closure_pos];
 			if (st[0] >= 'A' && st[0] <= 'Z')// if the clo_pos is nonterminal
 			{
 				for (int i = 0; i < rules.size(); i++)
@@ -518,12 +515,12 @@ int main()
 						dr.rNum = i;
 
 						// decied next token of this closure whether need to closure
-						s = ruleToken0[i];
+						s = rulesToken_departed[i][0];
 						if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
 							qi.push(states[stateNum].ders.size());// push the der pos
 
 						// find dr.follow
-						s = GetClosureToken(der_t.rNum, der_t.closure_pos + 1);
+						s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
 						if (s == "")// next token of der_t is the end. => follow
 							dr.follows = der_t.follows;
 						else if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
