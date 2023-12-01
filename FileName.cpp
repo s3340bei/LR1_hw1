@@ -30,12 +30,13 @@ struct sta
 {
 	vector<der> ders;
 	// false: reduce, true: shift
-	map<string, pair<bool,int>> actions;
+	map<string, pair<bool, int>> actions;
 	map<string, int> GoTo;
 };
 vector<sta> states;
 vector<string> ruleToken0;
 int stateNum = 0;
+vector<vector<string>> rulesToken_departed;
 
 
 // tmp variable
@@ -338,6 +339,22 @@ int main()
 	{
 		ruleToken0.push_back(GetClosureToken(i, 0));
 	}
+	// store rule token
+	rulesToken_departed.assign(rules.size(), vector<string>());
+	for (int i = 0; i < rules.size(); i++)
+	{
+		for (int j = 0; j < rules_token[i].size();)
+		{
+			string str4;
+			str4 = *rules_token[i][j];
+			int x = 1;
+			while (x < rules_token[i].size()
+				&& *(rules_token[i][j] + x) != '\0')
+				str4 += *(rules_token[i][j] + x++);
+			rulesToken_departed[i].push_back(str4);
+			j += x;
+		}
+	}
 	// find firsts.
 	FindFirst();
 
@@ -424,6 +441,8 @@ int main()
 			{
 				der_t = sta_0.ders[j];
 				++der_t.closure_pos;
+				if (der_t.closure_pos > rulesToken_departed[der_t.rNum].size())
+					der_t.closure_pos = -1;
 				// check whether the derivation exits
 				b = true;
 				for (auto& j : sta_tmp.ders)
@@ -455,6 +474,8 @@ int main()
 			{
 				der_t = sta_0.ders[j];
 				++der_t.closure_pos;
+				if (der_t.closure_pos > rulesToken_departed[der_t.rNum].size())
+					der_t.closure_pos = -1;
 				// check whether the derivation exits
 				b = true;
 				for (auto& j : sta_tmp.ders)
