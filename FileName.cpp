@@ -398,7 +398,7 @@ int main()
 					// find dr.follow
 					if (der_t.closure_pos + 1 >= rulesToken_departed[der_t.rNum].size())// next token of der_t is the end. => follow
 						dr.follows = der_t.follows;
-					else 
+					else
 					{
 						s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
 						if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
@@ -438,7 +438,7 @@ int main()
 			{
 				der_t = sta_0.ders[j];
 				++der_t.closure_pos;
-				if (der_t.closure_pos > rulesToken_departed[der_t.rNum].size())
+				if (der_t.closure_pos >= rulesToken_departed[der_t.rNum].size())
 					der_t.closure_pos = -1;
 				// check whether the derivation exits
 				b = true;
@@ -471,7 +471,7 @@ int main()
 			{
 				der_t = sta_0.ders[j];
 				++der_t.closure_pos;
-				if (der_t.closure_pos > rulesToken_departed[der_t.rNum].size())
+				if (der_t.closure_pos >= rulesToken_departed[der_t.rNum].size())
 					der_t.closure_pos = -1;
 				// check whether the derivation exits
 				b = true;
@@ -494,11 +494,17 @@ int main()
 		}
 	}
 	// state i closure
-	while (stateNum < states.size())
+	while (stateNum + 1 < states.size())
 	{
 		++stateNum;
+		// add reduce and push queue the closure derivations
 		for (int i = 0; i < states[stateNum].ders.size(); i++)
-			qi.push(i);
+		{
+			if (states[stateNum].ders[i].closure_pos == -1)
+				for (auto& j : states[stateNum].ders[i].follows)
+					states[stateNum].actions[j] = make_pair(0, states[stateNum].ders[i].rNum);
+			else qi.push(i);
+		}
 		while (!qi.empty())
 		{
 			n = qi.front();
@@ -520,13 +526,16 @@ int main()
 							qi.push(states[stateNum].ders.size());// push the der pos
 
 						// find dr.follow
-						s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
-						if (s == "")// next token of der_t is the end. => follow
+						if (der_t.closure_pos + 1 >= rulesToken_departed[der_t.rNum].size())// next token of der_t is the end. => follow
 							dr.follows = der_t.follows;
-						else if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
-							dr.follows = GetFirst(s);
-						else //next token of der_t is terminal
-							dr.follows.insert(s);
+						else
+						{
+							s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
+							if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
+								dr.follows = GetFirst(s);
+							else //next token of der_t is terminal
+								dr.follows.insert(s);
+						}
 						// check whether the derivation exits
 						b = true;
 						for (auto& j : states[stateNum].ders)
