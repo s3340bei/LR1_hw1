@@ -49,6 +49,7 @@ struct sta
 vector<sta> states;
 int stateNum = 0;
 vector<vector<string>> rulesToken_departed;
+vector<vector<string>> parsingTable;
 
 
 // tmp variable
@@ -277,11 +278,32 @@ void State_i_Closure()
 				}
 			}
 		}
+		// test if the state is exits
 		b = true;
 		for (int i = 0; i < stateNum; i++)
 		{
 			if (states[i] == states[stateNum])
 			{
+				// point to deleting state : point to the existing same state
+				// point to after the deleting state : +1
+				for (int j = 0; j < states.size(); j++)
+				{
+					if (j == stateNum)continue;
+					for (auto& k : states[j].actions)
+					{
+						if (k.second.first == true && k.second.second == stateNum)
+							k.second.second = i;
+						else if (k.second.first == true && k.second.second > stateNum)
+							k.second.second -= 1;
+					}
+					for (auto& k : states[j].GoTo)
+					{
+						if (k.second == stateNum)
+							k.second = i;
+						else if (k.second > stateNum)
+							k.second -= 1;
+					}
+				}
 				b = false;
 				break;
 			}
@@ -519,8 +541,6 @@ int main()
 
 
 
-
-
 	// output states
 	cout << "[\"" << rules[0].first << "->." << rules[0].second << "\"";
 	for (auto& i : rules)
@@ -529,8 +549,6 @@ int main()
 			cout << ", \'" << i.first << "->" << i.second << "\'";
 	}
 	cout << "]\n///////////////// state ////////////////////\n";
-
-	//Closure_0();
 	// State 0
 	sta sta_0;
 	// derivations need to be closure
@@ -596,5 +614,73 @@ int main()
 		ClosureDepart(sNum_CD++);
 		// state i closure
 		State_i_Closure();
+	}
+	// delete the nonterminal S'
+	nonterminals.erase(nonterminals.begin());
+
+
+	// output parsing table
+	cout << "///////////////// parsing table ////////////////////\n+";
+	// add into parsingTable
+	parsingTable.assign(states.size(), vector<string>());
+	for (int i = 0; i < states.size(); i++)
+	{
+		// $
+		if (states[i].actions.find("$") == states[i].actions.end())// empty
+			parsingTable[i].push_back("");
+		else
+		{
+			if (states[i].actions["$"].second == 0 && states[i].actions["$"].first == false)
+				parsingTable[i].push_back("Acc");// r0 is Accept.
+			else
+			{
+				if (states[i].actions["$"].first == false)s = "r";//reduce					
+				else s = "s";// shift
+				s += to_string(states[i].actions["$"].second);
+				parsingTable[i].push_back(s);
+			}
+		}
+		// terminals
+		for (auto& j : terminals)
+		{
+			if (states[i].actions.find(j) == states[i].actions.end())// empty
+				parsingTable[i].push_back("");
+			else
+			{
+				if (states[i].actions[j].first == false)s = "r";//reduce					
+				else s = "s";// shift
+				s += to_string(states[i].actions[j].second);
+				parsingTable[i].push_back(s);
+			}
+		}
+		// nonterminals
+		for (auto& j : nonterminals)
+		{
+			if (states[i].GoTo.find(j) == states[i].GoTo.end())// empty
+				parsingTable[i].push_back("");
+			else
+			{
+				s = to_string(states[i].GoTo[j]);
+				parsingTable[i].push_back(s);
+			}
+		}
+	}
+	// output line 1
+	vector<int> maxSizeV;// find the vertical max size
+	maxSizeV.push_back(to_string(states.size() - 1).size());
+	int x = 0;
+	for (int j = 0; j < parsingTable[0].size(); j++)
+	{
+		n = 0;
+		if (j > 0 && j <= terminals.size() && n < terminals[j - 1].size())
+			n = terminals[j - 1].size();
+		else if (j > terminals.size() && n < nonterminals[j - terminals.size() - 1].size())
+			n = nonterminals[j - terminals.size() - 1].size();
+		for (int i = 0; i < parsingTable.size(); i++)
+		{
+			if (parsingTable[i][j].size() > n)
+				n = parsingTable[i][j].size();
+		}
+		maxSizeV.push_back(n);
 	}
 }
