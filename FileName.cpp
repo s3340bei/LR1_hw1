@@ -383,6 +383,15 @@ void ClosureDepart(int sNum)
 		}
 	}
 }
+void Output_grid(char cBig, char cSmall, string s, int maxSize)
+{
+	int x1 = (maxSize - s.size()) / 2;
+	cout << cBig;
+	for (int i = 0; i < x1; i++)cout << cBig;
+	cout << s;
+	for (int i = 0; i < (maxSize - s.size()) - x1; i++)cout << cBig;
+	cout << cBig << cSmall;
+}
 
 int main()
 {
@@ -665,8 +674,8 @@ int main()
 			}
 		}
 	}
-	// output line 1
-	vector<int> maxSizeV;// find the vertical max size
+	// find the vertical max size
+	vector<int> maxSizeV;
 	maxSizeV.push_back(to_string(states.size() - 1).size());
 	int x = 0;
 	for (int j = 0; j < parsingTable[0].size(); j++)
@@ -683,4 +692,33 @@ int main()
 		}
 		maxSizeV.push_back(n);
 	}
+	// output line 1 : +---+-----+---+
+	for (int i = 0; i < maxSizeV.size(); i++)
+		Output_grid('-', '+', "", maxSizeV[i]);
+	// output line 2 : |  | $ | a | S |
+	n = 0;
+	cout << "\n|";
+	Output_grid(' ', '|', "", maxSizeV[n++]);
+	Output_grid(' ', '|', "$", maxSizeV[n++]);
+	for (auto& j : terminals)
+		Output_grid(' ', '|', j, maxSizeV[n++]);
+	for (auto& j : nonterminals)
+		Output_grid(' ', '|', j, maxSizeV[n++]);
+	// output line 3 : +---+-----+---+
+	cout << "\n+";
+	for (int i = 0; i < maxSizeV.size(); i++)
+		Output_grid('-', '+', "", maxSizeV[i]);
+	// output line 4 : states, actions, and GoTo
+	for (int i = 0; i < states.size(); i++)
+	{
+		n = 0;
+		cout << "\n|";
+		Output_grid(' ', '|', to_string(i), maxSizeV[n++]);
+		for (int j = 0; j < parsingTable[0].size(); j++)
+			Output_grid(' ', '|', parsingTable[i][j], maxSizeV[n++]);
+	}
+	// output parsing table end
+	cout << "\n+";
+	for (int i = 0; i < maxSizeV.size(); i++)
+		Output_grid('-', '+', "", maxSizeV[i]);
 }
