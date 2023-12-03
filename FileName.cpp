@@ -50,6 +50,7 @@ vector<sta> states;
 int stateNum = 0;
 vector<vector<string>> rulesToken_departed;
 vector<vector<string>> parsingTable;
+vector<vector<string>> testToken_departed;
 
 
 // tmp variable
@@ -239,42 +240,40 @@ void State_i_Closure()
 			string st = rulesToken_departed[der_t.rNum][der_t.closure_pos];
 			if (st[0] >= 'A' && st[0] <= 'Z')// if the clo_pos is nonterminal
 			{
-				for (int i = 0; i < rules.size(); i++)
+				for (int i = 1; i < rules.size(); i++)
 				{
-					if (rules[i].first == st)//find the closure derivations
+					if (rules[i].first != st)continue;//find the closure derivations
+					der dr;
+					dr.rNum = i;
+
+					// decied next token of this closure whether need to closure
+					s = rulesToken_departed[i][0];
+					if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
+						qi.push(states[stateNum].ders.size());// push the der pos
+
+					// find dr.follow
+					if (der_t.closure_pos + 1 >= rulesToken_departed[der_t.rNum].size())// next token of der_t is the end. => follow
+						dr.follows = der_t.follows;
+					else
 					{
-						der dr;
-						dr.rNum = i;
-
-						// decied next token of this closure whether need to closure
-						s = rulesToken_departed[i][0];
-						if (s[0] >= 'A' && s[0] <= 'Z')// next closure 0 is nonterminal
-							qi.push(states[stateNum].ders.size());// push the der pos
-
-						// find dr.follow
-						if (der_t.closure_pos + 1 >= rulesToken_departed[der_t.rNum].size())// next token of der_t is the end. => follow
-							dr.follows = der_t.follows;
-						else
-						{
-							s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
-							if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
-								dr.follows = GetFirst(s);
-							else //next token of der_t is terminal
-								dr.follows.insert(s);
-						}
-						// check whether the derivation exits
-						b = true;
-						for (auto& j : states[stateNum].ders)
-						{
-							if (j == dr)
-							{
-								b = false;
-								break;
-							}
-						}
-						if (b == true)
-							states[stateNum].ders.push_back(dr);
+						s = rulesToken_departed[der_t.rNum][der_t.closure_pos + 1];
+						if (s[0] >= 'A' && s[0] <= 'Z')//next token of der_t is nonterminal
+							dr.follows = GetFirst(s);
+						else //next token of der_t is terminal
+							dr.follows.insert(s);
 					}
+					// check whether the derivation exits
+					b = true;
+					for (auto& j : states[stateNum].ders)
+					{
+						if (j == dr)
+						{
+							b = false;
+							break;
+						}
+					}
+					if (b == true)
+						states[stateNum].ders.push_back(dr);
 				}
 			}
 		}
@@ -407,7 +406,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("3_grammar.txt", ios::in);
+	ifstream ifs("1_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -547,7 +546,6 @@ int main()
 	}
 	// find firsts.
 	FindFirst();
-
 
 
 	// output states
@@ -721,4 +719,41 @@ int main()
 	cout << "\n+";
 	for (int i = 0; i < maxSizeV.size(); i++)
 		Output_grid('-', '+', "", maxSizeV[i]);
+
+
+
+
+	// test testdata
+	// testdata token
+	testToken_departed.assign(testdata.size(), vector<string>());
+	vector<bool> invalidTestData(testdata.size(), true);
+	for (int i = 0; i < testdata.size(); i++)
+	{
+		s = testdata[i];
+		for (int j = 0; j < s.length(); )//j: index of testdata[i]
+		{
+			b = false;
+			for (auto& k : terminals)
+			{
+				if (s[j] != k[0])continue;
+				testToken_departed[i].push_back(k);
+				j += k.size();
+				b = true;
+				break;
+			}
+			if (b == false)break;
+		}
+		invalidTestData[i] = b;
+	}
+	// output testdata
+	for (int i = 0; i < testdata.size(); i++)
+	{
+		cout << "parsing: " << testdata[i] << "\n";
+		if (invalidTestData[i] == false)
+		{
+			cout << "Invalid character exist!\nresult: Invalid!\n";
+			continue;
+		}
+
+	}
 }
