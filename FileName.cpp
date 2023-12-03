@@ -40,6 +40,11 @@ struct sta
 	// false: reduce, true: shift
 	map<string, pair<bool, int>> actions;
 	map<string, int> GoTo;
+	bool operator==(sta sta1)
+	{
+		if (ders != sta1.ders)return false;
+		return true;
+	}
 };
 vector<sta> states;
 int stateNum = 0;
@@ -272,7 +277,17 @@ void State_i_Closure()
 				}
 			}
 		}
-		OutputState(states[stateNum], stateNum);
+		b = true;
+		for (int i = 0; i < stateNum; i++)
+		{
+			if (states[i] == states[stateNum])
+			{
+				b = false;
+				break;
+			}
+		}
+		if (b == true)OutputState(states[stateNum], stateNum);
+		else states.erase(states.begin() + stateNum--);
 	}
 }
 void ClosureDepart(int sNum)
@@ -341,20 +356,8 @@ void ClosureDepart(int sNum)
 		}
 		if (!sta_tmp.ders.empty())
 		{
-			for (auto& j : states)
-			{
-				if (j.ders == sta_tmp.ders)
-				{
-					states[sNum].actions[terminals[i]] = make_pair(1, sNum);
-					b = false;
-					break;
-				}
-			}
-			if (b == true)
-			{
-				states.push_back(sta_tmp);
-				states[sNum].actions[terminals[i]] = make_pair(1, states.size() - 1);
-			}
+			states.push_back(sta_tmp);
+			states[sNum].actions[terminals[i]] = make_pair(1, states.size() - 1);
 		}
 	}
 }
@@ -373,7 +376,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("1_grammar.txt", ios::in);
+	ifstream ifs("3_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
