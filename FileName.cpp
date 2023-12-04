@@ -50,7 +50,7 @@ vector<sta> states;
 int stateNum = 0;
 vector<vector<string>> rulesToken_departed;
 vector<vector<string>> parsingTable;
-vector<vector<string>> testToken_departed;
+vector<string> testToken_departed;
 
 
 // tmp variable
@@ -724,36 +724,32 @@ int main()
 
 
 	// test testdata
-	// testdata token
-	testToken_departed.assign(testdata.size(), vector<string>());
-	vector<bool> invalidTestData(testdata.size(), true);
 	for (int i = 0; i < testdata.size(); i++)
 	{
-		s = testdata[i];
+		// testdata token
+		testToken_departed.clear();
 		for (int j = 0; j < s.length(); )//j: index of testdata[i]
 		{
 			b = false;
 			for (auto& k : terminals)
 			{
 				if (s[j] != k[0])continue;
-				testToken_departed[i].push_back(k);
+				testToken_departed.push_back(k);
 				j += k.size();
 				b = true;
 				break;
 			}
 			if (b == false)break;
 		}
-		invalidTestData[i] = b;
-	}
-	// output testdata
-	for (int i = 0; i < testdata.size(); i++)
-	{
+		// output testdata line 1
 		cout << "parsing: " << testdata[i] << "\n";
-		if (invalidTestData[i] == false)
+		// invalid character
+		if (b == false)
 		{
 			cout << "Invalid character exist!\nresult: Invalid!\n";
 			continue;
 		}
-
+		// stack input and actions
+		vector<string> stack;
 	}
 }
