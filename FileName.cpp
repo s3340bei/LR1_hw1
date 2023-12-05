@@ -400,11 +400,23 @@ int getTnumber(int x)
 		if (terminals[i] == s)return i + 1;
 	return 0;
 }
+void Output_stack(char cBig, char cSmall, string s, int maxSize)
+{
+	cout << cBig << s;
+	for (int i = 0; i < (maxSize - s.size()); i++)cout << cBig;
+	cout << cBig << cSmall;
+}
+void Output_input(char cBig, char cSmall, string s, int maxSize)
+{
+	cout << cBig;
+	for (int i = 0; i < (maxSize - s.size()); i++)cout << cBig;
+	cout << s << cBig << cSmall;
+}
 
 int main()
 {
 	// read testdata file
-	ifstream ifst("1_testdata.txt", ios::in);
+	ifstream ifst("2_testdata.txt", ios::in);
 	if (!ifst.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -415,7 +427,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("1_grammar.txt", ios::in);
+	ifstream ifs("2_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -733,20 +745,20 @@ int main()
 
 
 	// test testdata
-	for (int i = 0; i < testdata.size(); i++)
+	for (auto& tes : testdata)
 	{
 		// testdata token
 		testToken_departed.clear();
-		for (int j = 0; j < testdata[i].length(); )//j: index of testdata[i]
+		for (int j = 0; j < tes.length(); )//j: index of testdata[i]
 		{
 			b = false;
 			for (auto& k : terminals)
 			{
-				if (testdata[i][j] != k[0])continue;
+				if (tes[j] != k[0])continue;
 				bool bo1 = true;
 				for (int l = j + 1; l < k.length(); l++)
 				{
-					if (testdata[i][l] != k[l - j])
+					if (tes[l] != k[l - j])
 					{
 						bo1 = false; break;
 					}
@@ -760,14 +772,14 @@ int main()
 			if (b == false)break;
 		}
 		// output testdata line 1 : parsing: ab
-		cout << "\nparsing: " << testdata[i] << "\n";
+		cout << "\nparsing: " << tes << "\n";
 		// invalid character
 		if (b == false)
 		{
 			cout << "Invalid character exist!\nresult: Invalid!\n";
 			continue;
 		}
-		// stack input and actions
+		// stack, input and actions
 		stack<string> stack1;
 		stack1.push("0");
 		vector<string> output_stack;
@@ -775,7 +787,7 @@ int main()
 		vector<string> output_action;
 		int in_pos = 0;
 		output_stack.push_back("0");
-		output_input.push_back(testdata[i]);
+		output_input.push_back(tes);
 		string act = parsingTable[0][getTnumber(in_pos)];
 		if (act == "")act = "X";
 		output_action.push_back(act);
@@ -787,14 +799,13 @@ int main()
 			for (int j = 1; j < act.size(); j++)ac_num = ac_num * 10 + (act[j] - '0');
 			if (act[0] == 's')// shift
 			{
-				++in_pos;
-				// if in_pos >= testdata
-				if (in_pos >= testToken_departed.size())
+				// if in_pos > testdata
+				if (in_pos > testToken_departed.size())
 				{
 					act = "X"; break;
 				}
 				// stack
-				stack1.push(testToken_departed[in_pos]);
+				stack1.push(testToken_departed[in_pos++]);
 				s = output_stack[output_stack.size() - 1];
 				output_stack.push_back(s + stack1.top() + to_string(ac_num));
 				stack1.push(to_string(ac_num));
@@ -838,7 +849,31 @@ int main()
 			}
 		}
 		// output result
-		if (act == "Acc")cout << "result: Valid!\n";
-		else cout << "result: Inalid!\n";
+		if (act == "Acc")cout << "result: Valid!\n+";
+		else cout << "result: Invalid!\n+";
+		int maxS = 5; int maxI = 5; int maxA = 6;
+		for (auto& j : output_stack)if (j.length() > maxS)maxS = j.length();
+		for (auto& j : output_input)if (j.length() > maxI)maxI = j.length();
+		for (auto& j : output_action)if (j.length() > maxA)maxA = j.length();
+		Output_grid('-', '+', "", maxS);
+		Output_grid('-', '+', "", maxI);
+		Output_grid('-', '+', "", maxA); cout << "\n|";
+		Output_grid(' ', '|', "stack", maxS);
+		Output_grid(' ', '|', "input", maxI);
+		Output_grid(' ', '|', "action", maxA); cout << "\n+";
+		Output_grid('-', '+', "", maxS);
+		Output_grid('-', '+', "", maxI);
+		Output_grid('-', '+', "", maxA);
+		for (int j = 0; j < output_stack.size(); j++)
+		{
+			cout << "\n|";
+			Output_stack(' ', '|', output_stack[j], maxS);
+			Output_input(' ', '|', output_input[j], maxI);
+			Output_grid(' ', '|', output_action[j], maxA);
+		}
+		cout << "\n+";
+		Output_grid('-', '+', "", maxS);
+		Output_grid('-', '+', "", maxI);
+		Output_grid('-', '+', "", maxA); cout << "\n";
 	}
 }
