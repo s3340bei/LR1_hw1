@@ -12,7 +12,6 @@ using namespace std;
 vector<string> terminals;
 vector<string> nonterminals;
 vector<pair<string, string>> rules;
-vector<vector<char*>> rules_token;
 vector<string> testdata;
 vector<set<string>> firsts;
 struct der
@@ -482,87 +481,44 @@ int main()
 	// close file
 	ifs.close();
 	//  rules token
-	n = min(terminals.size(), nonterminals.size());
-	for (int i = 0; i < rules.size(); i++)
-	{
-		s = rules[i].second;
-		rules_token.push_back(empty_v);
-		for (int j = 0; j < s.length(); )//j: index of rules[i]
-		{
-			int k;
-			b = false;
-			for (k = 0; k < n; k++)
-			{
-				if (s[j] == terminals[k][0])
-				{
-					rules_token[i].push_back(&terminals[k][0]);
-					//fill the index 1 and following with 0
-					for (int l = 0; l < terminals[k].size() - 1; l++)
-					{
-						rules_token[i].push_back(nullptr);
-					}
-					// turn to next token
-					j += terminals[k].size();
-					// avoid line 128, 139 do the loop
-					b = true;
-					break;
-				}
-				else if (s[j] == nonterminals[k][0])
-				{
-					bool bb = false;
-					for (int l = j + 1; l < nonterminals[k].size(); l++)
-						if (s[l] != nonterminals[k][l - j])bb = true;
-					if (bb)continue;
-					rules_token[i].push_back(&nonterminals[k][0]);
-					for (int l = 0; l < nonterminals[k].size() - 1; l++)
-						rules_token[i].push_back(nullptr);
-					j += nonterminals[k].size();
-					b = true;
-					break;
-				}
-			}
-			if (!b)for (int m = k; m < terminals.size(); m++)
-			{
-				if (s[j] == terminals[m][0])
-				{
-					rules_token[i].push_back(&terminals[m][0]);
-					for (int l = 0; l < terminals[m].size() - 1; l++)
-						rules_token[i].push_back(nullptr);
-					j += terminals[m].size();
-					break;
-				}
-			}
-			if (!b)for (int m = k; m < nonterminals.size(); m++)
-			{
-				if (s[j] == nonterminals[m][0])
-				{
-					bool bb = false;
-					for (int l = j + 1; l < nonterminals[m].size(); l++)
-						if (s[l] != nonterminals[m][l - j])bb = true;
-					if (bb)continue;
-					rules_token[i].push_back(&nonterminals[m][0]);
-					for (int l = 0; l < nonterminals[m].size() - 1; l++)
-						rules_token[i].push_back(nullptr);
-					j += nonterminals[m].size();
-					break;
-				}
-			}
-		}
-	}
-	// store rule token
 	rulesToken_departed.assign(rules.size(), vector<string>());
 	for (int i = 0; i < rules.size(); i++)
 	{
-		for (int j = 0; j < rules_token[i].size();)
+		string tes = rules[i].second;
+		for (int j = 0; j < tes.length(); )//j: index of rules[i]
 		{
-			string str4;
-			str4 = *rules_token[i][j];
-			int x = 1;
-			while (x < rules_token[i].size()
-				&& *(rules_token[i][j] + x) != '\0')
-				str4 += *(rules_token[i][j] + x++);
-			rulesToken_departed[i].push_back(str4);
-			j += x;
+			for (auto& k : terminals)
+			{
+				if (tes[j] != k[0])continue;
+				bool bo1 = true;
+				for (int l = j + 1; l < k.length(); l++)
+				{
+					if (tes[l] != k[l - j])
+					{
+						bo1 = false; break;
+					}
+				}
+				if (bo1 == false)continue;
+				rulesToken_departed[i].push_back(k);
+				j += k.size();
+				break;
+			}
+			for (auto& k : nonterminals)
+			{
+				if (tes[j] != k[0])continue;
+				bool bo1 = true;
+				for (int l = j + 1; l < k.length(); l++)
+				{
+					if (tes[l] != k[l - j])
+					{
+						bo1 = false; break;
+					}
+				}
+				if (bo1 == false)continue;
+				rulesToken_departed[i].push_back(k);
+				j += k.size();
+				break;
+			}
 		}
 	}
 	// find firsts.
