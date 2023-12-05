@@ -505,7 +505,7 @@ int main()
 			}
 			for (auto& k : nonterminals)
 			{
-				if (tes[j] != k[0])continue;
+				if (tes[j] != k[0] || k == nonterminals[0])continue;
 				bool bo1 = true;
 				for (int l = j + 1; l < k.length(); l++)
 				{
