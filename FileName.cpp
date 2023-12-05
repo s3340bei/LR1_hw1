@@ -5,6 +5,7 @@
 #include <queue>
 #include <map>
 #include <set>
+#include <stack>
 using namespace std;
 
 // space allocated
@@ -391,6 +392,14 @@ void Output_grid(char cBig, char cSmall, string s, int maxSize)
 	for (int i = 0; i < (maxSize - s.size()) - x1; i++)cout << cBig;
 	cout << cBig << cSmall;
 }
+int getTnumber(int x)
+{
+	if (x >= testToken_departed.size())return 0;
+	else s = testToken_departed[x];
+	for (int i = 0; i < terminals.size(); i++)
+		if (terminals[i] == s)return i + 1;
+	return 0;
+}
 
 int main()
 {
@@ -741,7 +750,7 @@ int main()
 			}
 			if (b == false)break;
 		}
-		// output testdata line 1
+		// output testdata line 1 : parsing: ab
 		cout << "parsing: " << testdata[i] << "\n";
 		// invalid character
 		if (b == false)
@@ -750,6 +759,72 @@ int main()
 			continue;
 		}
 		// stack input and actions
-		vector<string> stack;
+		stack<string> stack1;
+		stack1.push("0");
+		vector<string> output_stack;
+		vector<string> output_input;
+		vector<string> output_action;
+		int in_pos = 0;
+		output_stack.push_back("0");
+		output_input.push_back(testdata[i]);
+		string act = parsingTable[0][getTnumber(in_pos)];
+		if (act == "")act = "X";
+		output_action.push_back(act);
+		while (act != "Acc")
+		{
+			if (act == "X")break;
+			// stack_num
+			int ac_num = 0;// the last action number
+			for (int j = 1; j < act.size(); j++)ac_num = ac_num * 10 + (act[j] - '0');
+			if (act[0] == 's')// shift
+			{
+				// stack
+				stack1.push(testToken_departed[in_pos++]);
+				s = "";
+				for (auto& j : output_stack)s += j;
+				output_stack.push_back(s + stack1.top() + to_string(ac_num));
+				stack1.push(to_string(ac_num));
+				// input
+				s = "";
+				for (int j = in_pos; j < testToken_departed.size(); j++)
+					s += testToken_departed[j];
+				output_input.push_back(s + "$");
+				// action
+				act = parsingTable[ac_num][getTnumber(in_pos)];
+				if (act == "")act = "X";
+				output_action.push_back(act);
+			}
+			else// reduce
+			{
+				// reduce
+				string rs = output_stack[output_stack.size() - 1];// rs is the last stack string
+				int count = 0;// count reduce string length
+				for (int j = rulesToken_departed[ac_num].size() * 2; j > 0; j--)
+				{
+					count += stack1.top().length();
+					stack1.pop();
+				}
+				rs = rs.substr(0, count);// rs: after reduce
+				// stack
+				s = stack1.top();
+				count = 0;// count the before Goto state number
+				for (int j = 0; j < s.length(); j++)count = count * 10 + (s[j] - '0');
+				stack1.push(rules[ac_num].first);
+				act = to_string(states[count].GoTo[stack1.top()]);// Goto state number
+				output_stack.push_back(rs + stack1.top() + act);
+				stack1.push(act);
+				// input
+				output_input.push_back(output_input[output_input.size() - 1]);
+				// action
+				count = 0;// count the state number
+				for (int j = 0; j < act.length(); j++)count = count * 10 + (act[j] - '0');
+				act = parsingTable[count][getTnumber(in_pos)];
+				if (act == "")act = "X";
+				output_action.push_back(act);
+			}
+		}
+		// output result
+		if (act == "Acc")cout << "result: Valid!\n";
+		else cout << "result: Inalid!\n";
 	}
 }
