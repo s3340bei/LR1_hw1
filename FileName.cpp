@@ -737,12 +737,21 @@ int main()
 	{
 		// testdata token
 		testToken_departed.clear();
-		for (int j = 0; j < s.length(); )//j: index of testdata[i]
+		for (int j = 0; j < testdata[i].length(); )//j: index of testdata[i]
 		{
 			b = false;
 			for (auto& k : terminals)
 			{
-				if (s[j] != k[0])continue;
+				if (testdata[i][j] != k[0])continue;
+				bool bo1 = true;
+				for (int l = j + 1; l < k.length(); l++)
+				{
+					if (testdata[i][l] != k[l - j])
+					{
+						bo1 = false; break;
+					}
+				}
+				if (bo1 == false)continue;
 				testToken_departed.push_back(k);
 				j += k.size();
 				b = true;
@@ -751,7 +760,7 @@ int main()
 			if (b == false)break;
 		}
 		// output testdata line 1 : parsing: ab
-		cout << "parsing: " << testdata[i] << "\n";
+		cout << "\nparsing: " << testdata[i] << "\n";
 		// invalid character
 		if (b == false)
 		{
@@ -778,10 +787,15 @@ int main()
 			for (int j = 1; j < act.size(); j++)ac_num = ac_num * 10 + (act[j] - '0');
 			if (act[0] == 's')// shift
 			{
+				++in_pos;
+				// if in_pos >= testdata
+				if (in_pos >= testToken_departed.size())
+				{
+					act = "X"; break;
+				}
 				// stack
-				stack1.push(testToken_departed[in_pos++]);
-				s = "";
-				for (auto& j : output_stack)s += j;
+				stack1.push(testToken_departed[in_pos]);
+				s = output_stack[output_stack.size() - 1];
 				output_stack.push_back(s + stack1.top() + to_string(ac_num));
 				stack1.push(to_string(ac_num));
 				// input
@@ -804,7 +818,7 @@ int main()
 					count += stack1.top().length();
 					stack1.pop();
 				}
-				rs = rs.substr(0, count);// rs: after reduce
+				rs = rs.substr(0, rs.length() - count);// rs: after reduce
 				// stack
 				s = stack1.top();
 				count = 0;// count the before Goto state number
