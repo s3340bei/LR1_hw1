@@ -415,7 +415,7 @@ void Output_input(char cBig, char cSmall, string s, int maxSize)
 int main()
 {
 	// read testdata file
-	ifstream ifst("2_testdata.txt", ios::in);
+	ifstream ifst("testdata.txt", ios::in);
 	if (!ifst.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -426,7 +426,7 @@ int main()
 	ifst.close();
 
 	// read grammer file
-	ifstream ifs("2_grammar.txt", ios::in);
+	ifstream ifs("1_grammar.txt", ios::in);
 	if (!ifs.is_open())
 	{
 		cout << "Failed to open file.\n";
