@@ -65,39 +65,6 @@ queue<int> qi;// store the un_closure derNum in state i
 
 // functions
 
-// rules number, closure pos
-//string GetClosureToken(int i, int j)
-//{
-//	int nt;
-//	if (j >= rules_token[i].size())
-//		return "";
-//	if (ruleToken0.size() > i && j == 0)
-//		return ruleToken0[i];
-//	if (j < 0)return "";// undefined
-//	if (j > 0)
-//	{
-//		nt = 1;
-//		if (nt > rules_token[i].size() - 1)return "";
-//		int itg = 1;
-//		while (itg < j)
-//		{
-//			while (rules_token[i][nt] == nullptr)
-//			{
-//				if (nt > rules_token[i].size() - 1)return "";// end
-//			}
-//			itg++;
-//			nt++;
-//		}
-//		j = nt;
-//	}
-//	string str;
-//	str = *(rules_token[i][j]);
-//	nt = 1;
-//	while (nt < rules_token[i].size()
-//		&& *(rules_token[i][j] + nt) != '\0')
-//		str += *(rules_token[i][j] + nt++);
-//	return str;
-//}
 bool operator==(vector<der> de1, vector<der> de2)
 {
 	if (de1.size() != de2.size())return false;
