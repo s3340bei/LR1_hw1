@@ -194,7 +194,7 @@ void State_i_Closure()
 		// add reduce and push queue the closure derivations
 		for (int i = 0; i < states[stateNum].ders.size(); i++)
 		{
-			if (states[stateNum].ders[i].closure_pos == -1)
+			if (states[stateNum].ders[i].closure_pos == -1)// closure end
 				for (auto& j : states[stateNum].ders[i].follows)
 					states[stateNum].actions[j] = make_pair(0, states[stateNum].ders[i].rNum);
 			else qi.push(i);
@@ -233,8 +233,9 @@ void State_i_Closure()
 					b = true;
 					for (auto& j : states[stateNum].ders)
 					{
-						if (j == dr)
+						if (j.closure_pos == dr.closure_pos && j.rNum == dr.rNum)// merge the follows
 						{
+							for (auto& k : dr.follows)j.follows.insert(k);
 							b = false;
 							break;
 						}
@@ -298,8 +299,9 @@ void ClosureDepart(int sNum)
 				b = true;
 				for (auto& j : sta_tmp.ders)
 				{
-					if (j == der_t)
+					if (j.closure_pos == der_t.closure_pos && j.rNum == der_t.rNum)// merge the follows
 					{
+						for (auto& k : der_t.follows)j.follows.insert(k);
 						b = false;
 						break;
 					}
@@ -332,8 +334,9 @@ void ClosureDepart(int sNum)
 				b = true;
 				for (auto& j : sta_tmp.ders)
 				{
-					if (j == der_t)
+					if (j.closure_pos == der_t.closure_pos && j.rNum == der_t.rNum)// merge the follows
 					{
+						for (auto& k : der_t.follows)j.follows.insert(k);
 						b = false;
 						break;
 					}
@@ -382,7 +385,7 @@ void Output_input(char cBig, char cSmall, string s, int maxSize)
 int main()
 {
 	// read testdata file
-	ifstream ifst("testdata.txt", ios::in);
+	ifstream ifst("1_testdata.txt", ios::in);
 	if (!ifst.is_open())
 	{
 		cout << "Failed to open file.\n";
@@ -544,8 +547,9 @@ int main()
 					b = true;
 					for (auto& j : sta_0.ders)
 					{
-						if (j == dr)
+						if (j.closure_pos == dr.closure_pos && j.rNum == dr.rNum)// merge the follows
 						{
+							for (auto& k : dr.follows)j.follows.insert(k);
 							b = false;
 							break;
 						}
